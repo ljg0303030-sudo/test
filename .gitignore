@@ -1,0 +1,6 @@
+runtime/
+audit_20260922/
+jitter_shimmer_validation_20260927/recorder_deps/
+__pycache__/
+*.pyc
+startup_error.txt

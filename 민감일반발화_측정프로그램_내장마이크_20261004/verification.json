@@ -1,0 +1,10 @@
+{
+  "python_compilation": true,
+  "gui_creation": true,
+  "baseline_45_restored": true,
+  "real_wav_extraction": true,
+  "context_guard": true,
+  "result_display": true,
+  "ground_truth_csv_save": true,
+  "live_capture_tested": false
+}
