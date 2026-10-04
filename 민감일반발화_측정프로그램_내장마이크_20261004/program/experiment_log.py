@@ -4,11 +4,14 @@ import math
 from datetime import datetime, timezone
 from uuid import uuid4
 
+PIPELINE_VERSION = 'gui-boundary-context-20261004-internalmic'
+
 class ExperimentLog:
     def __init__(self):
         self.session_id = uuid4().hex
         self.baseline_id = 1
         self.rows = []
+        self.device_info = {}
 
     def new_baseline(self):
         self.baseline_id += 1
@@ -17,23 +20,47 @@ class ExperimentLog:
         result = payload['result']
         row = dict(record_id=len(self.rows)+1, session_id=self.session_id,
                    baseline_id=self.baseline_id, timestamp=datetime.now(timezone.utc).isoformat(),
-                   pipeline_version='gui-boundary-context-20261002', phase=phase, samples=payload['samples'],
+                   pipeline_version=PIPELINE_VERSION, phase=phase, samples=payload['samples'],
                    label='', prediction=('collection' if result is None else
                        'uncertain' if result.is_sensitive is None else
                        'sensitive' if result.is_sensitive else 'normal'),
                    votes='' if result is None else result.votes,
                    elapsed_ms=payload['elapsed_ms'])
-        for key, value in payload['features'].items():
-            if key!='measurement': row[key] = value
-        m=payload['features'].get('measurement',{})
-        region=m.get('region',{})
-        for key in ['start_sec','end_sec','duration_sec']:row['analysis_'+key]=region.get(key,'')
-        row['baseline_provenance']='restored_reference_or_user_reset; cross_device_validity_unverified'
+        self._measurement_fields(row, payload['features'])
         for key, stats in baseline.summary().items():
             row[key+'_median'] = stats['median']
             row[key+'_mad'] = stats['mad']
             score = getattr(result, 'scores', {}).get(key)
             row[key+'_z'] = score if score is not None and math.isfinite(score) else ''
+        self.rows.append(row)
+        return row['record_id']
+
+    def _measurement_fields(self, row, features):
+        row.update(self.device_info)
+        for key, value in (features or {}).items():
+            if key!='measurement': row[key] = value
+        m=(features or {}).get('measurement') or {}
+        region=m.get('region',{})
+        for key in ['start_sec','end_sec','duration_sec','noise_proxy_dbfs','signal_proxy_dbfs']:
+            row['analysis_'+key]=region.get(key,'')
+        row['analysis_warnings']=';'.join(region.get('warnings',[]))
+        # Spread of Jitter/Shimmer over the surrounding-context checks (same settings).
+        variants=[v['features'] for v in m.get('variants',[])]
+        for key in ['jitter','shimmer']:
+            values=[getattr(v,key) for v in variants]
+            row['context_'+key+'_min']=min(values) if values else ''
+            row['context_'+key+'_max']=max(values) if values else ''
+        row['baseline_provenance']='restored_reference_or_user_reset; pre_boundary_features; cross_device_validity_unverified'
+
+    def add_withheld(self, payload, baseline, phase='withheld'):
+        """Withheld utterance: no judgment, no baseline update, but values and reason are kept."""
+        row = dict(record_id=len(self.rows)+1, session_id=self.session_id,
+                   baseline_id=self.baseline_id, timestamp=datetime.now(timezone.utc).isoformat(),
+                   pipeline_version=PIPELINE_VERSION, phase=phase, samples=baseline.n_samples,
+                   label='', prediction='withheld', votes='',
+                   withheld_reason=payload.get('reason',''), elapsed_ms=payload.get('elapsed_ms',''),
+                   baseline_collecting=int(bool(getattr(baseline,'collecting',False))))
+        self._measurement_fields(row, payload.get('features'))
         self.rows.append(row)
         return row['record_id']
 

@@ -21,6 +21,7 @@ class LiveSession:
         self.ack = threading.Event()
         self.overflow = threading.Event()
         self.thread = None
+        self.stream_info = {}
 
     def start(self):
         self.thread = threading.Thread(target=self._run, daemon=True)
@@ -74,7 +75,12 @@ class LiveSession:
             segmenter = UtteranceSegmenter(samplerate=self.samplerate)
             self.accepting.set()
             with factory(samplerate=self.samplerate, channels=1, blocksize=1024,
-                         dtype='float32', device=self.device, callback=self._callback):
+                         dtype='float32', device=self.device, callback=self._callback) as stream:
+                # Record what PortAudio actually opened, not what was requested.
+                self.stream_info = dict(samplerate=getattr(stream, 'samplerate', self.samplerate),
+                                        device=getattr(stream, 'device', self.device),
+                                        latency=getattr(stream, 'latency', ''))
+                self._emit('opened', self.stream_info)
                 self._emit('status', '주변 소음 측정 중 · 1.5초 동안 조용히 기다려 주세요.')
                 calibrated = False
                 while not self.stopping.is_set():
@@ -99,6 +105,7 @@ class LiveSession:
                     self.ack.clear()
                     self._clear_blocks()
                     started = time.perf_counter()
+                    feats = None
                     try:
                         feats = extractor(audio, self.samplerate)
                         if not all(math.isfinite(float(feats[k])) and feats[k] >= 0
@@ -120,7 +127,9 @@ class LiveSession:
                             elapsed_ms=(time.perf_counter()-started)*1000)
                         self._emit('collection' if collecting else 'result', payload)
                     except Exception as exc:
-                        self._emit('quality', str(exc))
+                        # Keep the measured values (if any) so withheld utterances stay auditable.
+                        self._emit('quality', dict(reason=str(exc), features=feats,
+                            elapsed_ms=(time.perf_counter()-started)*1000))
                     finally:
                         del audio
                     while not self.stopping.is_set() and not self.ack.wait(.1):

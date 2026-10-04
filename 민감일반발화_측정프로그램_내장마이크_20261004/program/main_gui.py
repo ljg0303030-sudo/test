@@ -34,7 +34,8 @@ class SpeechApp:
         self.closing = False
         self.counter = 0
         self.devices = [None]
-        root.title('민감 발화 비교 실험 · 측정 개선 적용')
+        self.device_items = [None]
+        root.title('민감 발화 비교 실험 · 내장 마이크 · 측정 개선 적용')
         root.geometry('1200x850')
         root.minsize(860, 600)
         root.configure(bg='#f3f5f9')
@@ -50,7 +51,7 @@ class SpeechApp:
         controls = ttk.Frame(frame)
         controls.pack(fill='x')
         ttk.Label(controls, text='입력 장치').pack(side='left')
-        self.device_box = ttk.Combobox(controls, state='readonly', width=35, values=['시스템 기본 마이크'])
+        self.device_box = ttk.Combobox(controls, state='readonly', width=60, values=['— 실제 입력 장치를 선택하세요 —'])
         self.device_box.current(0)
         self.device_box.pack(side='left', padx=8)
         self.refresh_button = ttk.Button(controls, text='장치 새로고침', command=self.refresh)
@@ -63,8 +64,8 @@ class SpeechApp:
         self.reset_button.pack(side='right')
         sampling = ttk.Frame(frame)
         sampling.pack(fill='x', pady=(14,0))
-        ttk.Label(sampling, text='기존 45개 기준선은 과거 내장 마이크 참고값입니다. 이번 본체·외장 마이크 판정의 정확성은 미검증입니다.').pack(side='left')
-        self.status = tk.StringVar(value='대기 중 · 마이크를 선택하고 녹음 시작을 누르세요.')
+        ttk.Label(sampling, text='기존 45개 기준선은 구간 보정 전 방식으로 만든 과거 참고값입니다. 현재 판정의 분류 정확성은 미검증입니다.\n입력 장치: 노트북 내장 마이크 항목을 직접 고르세요. 같은 마이크가 여러 번 보이면 [MME] 항목을 권장합니다.', wraplength=1100).pack(side='left')
+        self.status = tk.StringVar(value='대기 중 · 내장 마이크 항목을 선택하고 녹음 시작을 누르세요.')
         ttk.Label(frame, textvariable=self.status, style='Status.TLabel', wraplength=940).pack(anchor='w', pady=(20,10))
         self.progress = ttk.Progressbar(frame, maximum=45)
         self.progress.pack(fill='x')
@@ -97,7 +98,7 @@ class SpeechApp:
         ttk.Button(labelling, text='저장 폴더 열기', command=lambda: os.startfile(str(self.storage))).pack(side='right', padx=3)
         ttk.Button(labelling, text='수치 기록 CSV 저장', command=self.export_log).pack(side='right')
         self.root.bind('<Control-s>', lambda event: self.export_log())
-        ttk.Label(frame, text='수치·정답은 records 폴더에 자동 저장 / 기준선은 재실행 시 복원 / 원본 음성·전사문 저장·전송 없음\n모델은 기존 상담 데이터로 사전 학습. 현재 정답 입력으로 재학습하지 않음. 모델 점수는 검증된 개인정보 확률이 아닙니다.', wraplength=940).pack(anchor='w', pady=(15,0))
+        ttk.Label(frame, text='수치·정답·입력 장치는 records 폴더에 자동 저장 / 기준선은 재실행 시 복원 / 원본 음성·전사문 저장·전송 없음\n모델은 기존 상담 데이터로 사전 학습. 현재 정답 입력으로 재학습하지 않음. 모델 점수는 검증된 개인정보 확률이 아닙니다.', wraplength=940).pack(anchor='w', pady=(15,0))
         root.protocol('WM_DELETE_WINDOW', self.close)
         self.refresh()
         if self.restore_error:
@@ -119,9 +120,11 @@ class SpeechApp:
     def refresh(self):
         try:
             import sounddevice as sd
-            items = [(i, d) for i, d in enumerate(sd.query_devices()) if d['max_input_channels'] > 0]
-            self.devices = [None]+[i for i,d in items]
-            self.device_box['values'] = ['시스템 기본 마이크']+[f"{i}: {d['name']}" for i,d in items]
+            from device_info import list_input_devices
+            items = list_input_devices(sd)
+            self.device_items = [None]+items
+            self.devices = [None]+[d['index'] for d in items]
+            self.device_box['values'] = ['— 실제 입력 장치를 선택하세요 —']+[d['label'] for d in items]
             self.device_box.current(0)
         except Exception as exc:
             self.status.set(f'장치 조회 실패: {exc}')
@@ -145,10 +148,19 @@ class SpeechApp:
 
     def start(self):
         if self.device_box.current()==0:
-            messagebox.showinfo('실제 입력 선택', '기본 입력 대신 목록에서 실제 마이크 이름을 선택하세요.', parent=self.root)
+            messagebox.showinfo('실제 입력 선택', '목록에서 노트북 내장 마이크 항목을 직접 선택하세요.\n(기본 입력을 내장 마이크로 가정하지 않습니다.)', parent=self.root)
             return
         if self.session:
             return
+        item = self.device_items[self.device_box.current()]
+        try:
+            import sounddevice as sd
+            from device_info import check_device, log_fields
+            check_device(sd, item)
+        except Exception as exc:
+            messagebox.showerror('입력 장치 열기 불가', str(exc), parent=self.root)
+            return
+        self.log.device_info = log_fields(item)
         from gui_runtime import LiveSession
         self.session = LiveSession(self.baseline, device=self.devices[self.device_box.current()])
         self.start_button['state'] = 'disabled'
@@ -192,7 +204,6 @@ class SpeechApp:
     def show_collection(self, payload):
         f = payload['features']
         self.log.add(payload, 'baseline', self.baseline)
-        self.log.rows[-1]['device']=self.device_box.get()
         if not self.autosave(): return
         self.update_baseline()
         self.values.set(f"음향 피크율 {f['speech_rate']:.3f}/s    Jitter {f['jitter']*100:.3f}%    Shimmer {f['shimmer']*100:.3f}%    F0 {f['f0']:.1f} Hz    침묵 {f['silence_duration']:.2f} 초")
@@ -215,7 +226,6 @@ class SpeechApp:
         self.counter += 1
         row = str(self.counter)
         self.row_records[row] = self.log.add(payload, 'evaluation', self.baseline)
-        self.log.rows[-1]['device']=self.device_box.get()
         try:
             model_started = time.perf_counter()
             comparison = self.model.predict(f)
@@ -240,6 +250,32 @@ class SpeechApp:
         if not self.autosave(): return
         self.status.set('녹음 잠시 멈춤 · 방금 발화의 실제 정답(일반/민감/모름)을 누르면 다음 발화를 받습니다.')
 
+    def show_withheld(self, payload):
+        reason = payload.get('reason', '')
+        f = payload.get('features')
+        collecting = getattr(self.baseline, 'collecting', False)
+        record = self.log.add_withheld(payload, self.baseline)
+        if f:
+            self.values.set(f"음향 피크율 {f['speech_rate']:.3f}/s    Jitter {f['jitter']*100:.3f}%    Shimmer {f['shimmer']*100:.3f}%    F0 {f['f0']:.1f} Hz    침묵 {f['silence_duration']:.2f} 초 (보류된 발화 · 판정 미사용)")
+        else:
+            self.values.set('발화속도 —    Jitter —    Shimmer —    F0 —    침묵 — (특징 계산 불가)')
+        self.mode.set('측정 불안정 · 이번 발화의 개인·모델 판정을 모두 보류 · 기준선 반영 없음')
+        if collecting:
+            if not self.autosave(): return
+            self.status.set(f'판정 보류: {reason} · 기준선 반영 없음 · 다음 문장을 말해 주세요.')
+            self.session.resume()
+            return
+        self.counter += 1
+        row = str(self.counter)
+        self.row_records[row] = record
+        self.table.insert('', 'end', iid=row, values=(datetime.now().strftime('%H:%M:%S'), '측정 보류', '—', '보류', '보류', '—', '미지정', f"{payload.get('elapsed_ms', 0):.0f} ms"))
+        self.table.see(row)
+        self.table.selection_set(row)
+        self.awaiting_label = row
+        if not self.autosave(): return
+        # Label withheld utterances too, so the hold rate can be reported per true class.
+        self.status.set(f'판정 보류: {reason} · 기준선 반영 없음 · 방금 발화의 실제 정답(일반/민감/모름)을 누르면 다음 발화를 받습니다.')
+
     def set_label(self, value):
         selected = self.table.selection()
         if not selected:
@@ -258,8 +294,13 @@ class SpeechApp:
                 self.status.set('자동 저장 완료 · 다음 문장을 말해 주세요.')
 
     def show_metrics(self):
-        rows = [r for r in self.log.rows if r['phase']=='evaluation' and r['label'] in ('normal','sensitive')]
-        lines = [f'이번 실행에서 정답을 지정한 평가 발화: {len(rows)}개', '기준선 수집·미지정·모름은 제외합니다.']
+        rows = [r for r in self.log.rows if r['phase'] in ('evaluation','withheld') and r['label'] in ('normal','sensitive')]
+        lines = [f'이번 실행에서 정답을 지정한 평가 발화(측정 보류 포함): {len(rows)}개', '기준선 수집·미지정·모름은 제외합니다. 같은 화자의 반복 발화이므로 독립 표본이 아닙니다.']
+        for name, title in [('normal','일반'),('sensitive','민감')]:
+            group = [r for r in rows if r['label']==name]
+            held = sum(r['phase']=='withheld' for r in group)
+            if group:
+                lines.append(f'{title} 정답 {len(group)}개 중 측정 보류 {held}개 ({held/len(group):.1%}), 판정 가능 {len(group)-held}개')
         for title,key in [('개인 기준선','prediction'),('모델 기본','model_default'),('모델 완화','model_relaxed')]:
             valid = [r for r in rows if r.get(key) in (0,1,'normal','sensitive')]
             tp = sum(r['label']=='sensitive' and r[key] in (1,'sensitive') for r in valid)
@@ -268,7 +309,7 @@ class SpeechApp:
             tn = sum(r['label']=='normal' and r[key] in (0,'normal') for r in valid)
             recall = f'{tp/(tp+fn):.1%}' if tp+fn else '계산 불가'
             fpr = f'{fp/(fp+tn):.1%}' if fp+tn else '계산 불가'
-            lines.append(f'\n{title}: 민감 검출 {tp}/{tp+fn} ({recall}), 일반 오탐 {fp}/{fp+tn} ({fpr})\n판정 보류·계산 실패: {len(rows)-len(valid)}개')
+            lines.append(f'\n{title}: 민감 검출 {tp}/{tp+fn} ({recall}), 일반 오탐 {fp}/{fp+tn} ({fpr}) · 판정된 발화 기준\n판정 보류·계산 실패: {len(rows)-len(valid)}/{len(rows)}개')
         messagebox.showinfo('현재 성적 · 이번 실행만', '\n'.join(lines), parent=self.root)
 
     def export_log(self):
@@ -312,13 +353,11 @@ class SpeechApp:
                     self.show_collection(payload)
                 elif kind == 'result':
                     self.show_result(payload)
+                elif kind == 'opened':
+                    from device_info import log_fields
+                    self.log.device_info = log_fields(self.device_items[self.device_box.current()], payload)
                 elif kind == 'quality':
-                    self.log.rows.append(dict(record_id=len(self.log.rows)+1, session_id=self.log.session_id, phase='withheld', label='', prediction='uncertain', reason=str(payload), timestamp=datetime.now().isoformat(), pipeline_version='gui-boundary-context-20261002', device=self.device_box.get()))
-                    self.autosave()
-                    self.status.set(f'판정 보류: {payload} · 기준선 반영 없음')
-                    self.mode.set('측정 불안정 · 이번 발화의 개인·모델 판정을 모두 보류')
-                    self.table.insert('', 'end', values=(datetime.now().strftime('%H:%M:%S'), '측정 보류', '—', '보류', '보류', '—', '—', '—'))
-                    self.session.resume()
+                    self.show_withheld(payload)
                 elif kind == 'error':
                     self.status.set(f'오류: {payload}')
                     messagebox.showerror('실행 오류', f'{payload}\n\n설치 여부, 마이크 연결 및 Windows 마이크 권한을 확인해 주세요.', parent=self.root)

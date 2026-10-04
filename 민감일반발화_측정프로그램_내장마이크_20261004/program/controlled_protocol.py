@@ -19,8 +19,10 @@ def make_trials():
     return [dict(t,trial_order=n+1) for n,t in enumerate(blocks[0]+blocks[1])]
 
 def summarize(rows):
+    held=[r for r in rows if r.get('phase')=='withheld' and r.get('assigned_condition')]
     rows=[r for r in rows if r.get('phase')=='evaluation' and r.get('trial_valid')==1]
     lines=[f'완료한 유효 발화: {len(rows)}/20',
+           f"측정 보류된 시도: {len(held)}개 (일반 {sum(r['assigned_condition']=='normal' for r in held)}, 민감 {sum(r['assigned_condition']=='sensitive' for r in held)}) · 보류 시 같은 문장을 다시 읽음",
            '가짜 번호를 읽는 1인 모의 실험입니다. 감정·실제 개인정보 노출 상황과 동일하지 않습니다.',
            'STT를 사용하지 않으므로 문장을 끝까지 읽었는지는 사용자 확인에 따릅니다.']
     paired={}

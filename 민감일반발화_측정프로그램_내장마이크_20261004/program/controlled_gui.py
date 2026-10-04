@@ -27,8 +27,8 @@ class ControlledApp:
         ttk.Label(frame,text='같은 숫자와 비슷한 문장 길이로 비교합니다. 일부러 속도·목소리를 바꾸지 마세요.',wraplength=900).pack(anchor='w',pady=8)
         ttk.Label(frame,text='모든 번호는 실험용 가상 문자열입니다. 주문번호도 전화번호와 같은 형식으로 읽습니다.\n숫자는 한 자리씩, 0은 모두 “공”으로 읽으세요. /는 묶음 표시이며 길게 쉬라는 뜻이 아닙니다.',wraplength=900).pack(anchor='w')
         controls=ttk.Frame(frame);controls.pack(fill='x',pady=12)
-        self.devices=[None]
-        self.device=ttk.Combobox(controls,state='readonly',width=36,values=['시스템 기본 마이크']);self.device.current(0);self.device.pack(side='left')
+        self.devices=[None];self.device_items=[None]
+        self.device=ttk.Combobox(controls,state='readonly',width=60,values=['— 실제 입력 장치를 선택하세요 —']);self.device.current(0);self.device.pack(side='left')
         self.start_button=ttk.Button(controls,text='시작 / 계속',command=self.start);self.start_button.pack(side='left',padx=5)
         ttk.Button(controls,text='중지',command=self.stop).pack(side='left')
         self.reuse_button=ttk.Button(frame,text='지난 실험의 45개 기준선 불러오기',command=self.reuse);self.reuse_button.pack(anchor='w')
@@ -36,7 +36,7 @@ class ControlledApp:
         self.progress=tk.StringVar();ttk.Label(frame,textvariable=self.progress).pack(anchor='w',pady=12)
         self.prompt=tk.StringVar();ttk.Label(frame,textvariable=self.prompt,font=('맑은 고딕',18,'bold'),wraplength=900).pack(anchor='w',pady=12)
         self.reading=tk.StringVar();ttk.Label(frame,textvariable=self.reading,wraplength=900).pack(anchor='w',pady=8)
-        self.status=tk.StringVar(value='마이크를 고르고 시작을 누르세요. 기존 기준선은 같은 사람·마이크·환경에서만 재사용하세요.')
+        self.status=tk.StringVar(value='내장 마이크 항목을 직접 고르고 시작을 누르세요. 같은 마이크가 여러 번 보이면 [MME] 항목을 권장합니다.')
         ttk.Label(frame,textvariable=self.status,wraplength=900).pack(anchor='w',pady=10)
         buttons=ttk.Frame(frame);buttons.pack(fill='x')
         self.accept_button=ttk.Button(buttons,text='문장 끝까지 맞게 읽었음 → 다음',command=lambda:self.confirm(True),state='disabled');self.accept_button.pack(side='left')
@@ -46,8 +46,9 @@ class ControlledApp:
         ttk.Label(frame,text='판정과 수치는 20문장 완료 전까지 숨깁니다. 모든 시도·확인·기준선은 자동 저장됩니다.\n원본 음성 저장·외부 전송·STT·실험 중 재학습 없음. 실험 문장과 정답 조건은 CSV에 기록됩니다.',wraplength=900).pack(anchor='w',pady=15)
         try:
             import sounddevice as sd
-            items=[(i,d) for i,d in enumerate(sd.query_devices()) if d['max_input_channels']>0]
-            self.devices+=[i for i,d in items];self.device['values']=['시스템 기본 마이크']+[f"{i}: {d['name']}" for i,d in items]
+            from device_info import list_input_devices
+            items=list_input_devices(sd)
+            self.device_items+=items;self.devices+=[d['index'] for d in items];self.device['values']=['— 실제 입력 장치를 선택하세요 —']+[d['label'] for d in items]
         except Exception as exc:self.status.set(f'마이크 목록 조회 실패: {exc}')
         self.update_prompt();root.protocol('WM_DELETE_WINDOW',self.close);root.after(80,self.poll)
     def update_prompt(self):
@@ -64,14 +65,31 @@ class ControlledApp:
             self.stop();messagebox.showerror('저장 실패',str(exc)+'\n녹음을 중지했습니다. 폴더 쓰기 권한과 여유 공간을 확인하세요.',parent=self.root);return False
     def reuse(self):
         if self.session or self.index or self.log.rows:return
-        if not messagebox.askyesno('기준선 재사용','9월 21일 16:47 실험의 45개 기준선입니다.\n같은 사람·마이크·환경인가요?',parent=self.root):return
-        self.baseline=load_baseline(Path(__file__).with_name('previous_baseline.json'));self.save();self.update_prompt()
+        source=Path(__file__).with_name('reference_baseline_original.json')
+        # A missing file would load as an empty baseline and overwrite records/baseline.json.
+        if not source.exists():
+            messagebox.showerror('기준선 파일 없음',f'{source.name}이 없어 불러오지 않았습니다. 현재 기준선은 그대로입니다.',parent=self.root);return
+        if not messagebox.askyesno('기준선 재사용','9월 21일 16:47 실험의 45개 기준선입니다(구간 보정 전 방식).\n같은 사람·마이크·환경인가요?',parent=self.root):return
+        loaded=load_baseline(source)
+        if loaded.n_samples!=45:
+            messagebox.showerror('기준선 확인 실패',f'{loaded.n_samples}개만 읽혀 적용하지 않았습니다.',parent=self.root);return
+        self.baseline=loaded;self.save();self.update_prompt()
     def reset(self):
         if self.session or self.index or self.log.rows:return
         if messagebox.askyesno('기준선 초기화','기준선 45개를 새로 수집할까요?',parent=self.root):
             self.baseline=ProgressiveBaseline();self.save();self.update_prompt()
     def start(self):
         if self.session or self.index>=20:return
+        if self.device.current()==0:
+            messagebox.showinfo('실제 입력 선택','목록에서 노트북 내장 마이크 항목을 직접 선택하세요.',parent=self.root);return
+        item=self.device_items[self.device.current()]
+        try:
+            import sounddevice as sd
+            from device_info import check_device,log_fields
+            check_device(sd,item)
+        except Exception as exc:
+            messagebox.showerror('입력 장치 열기 불가',str(exc),parent=self.root);return
+        self.log.device_info=log_fields(item)
         self.pending=None;self.accept_button['state']=self.retry_button['state']='disabled'
         self.session=LiveSession(self.baseline,device=self.devices[self.device.current()]);self.session.start()
         self.start_button['state']=self.reuse_button['state']=self.reset_button['state']=self.device['state']='disabled'
@@ -104,7 +122,17 @@ class ControlledApp:
             if self.save():
                 self.accept_button['state']=self.retry_button['state']='normal'
                 self.status.set('녹음 잠시 멈춤 · 안내 문장을 끝까지 맞게 읽었나요? 아래 버튼으로 확인하세요.')
-        elif kind=='quality':self.status.set('측정 보류: '+str(payload)+' · 같은 문장을 다시 읽어 주세요.');self.session.resume()
+        elif kind=='opened':
+            from device_info import log_fields
+            self.log.device_info=log_fields(self.device_items[self.device.current()],payload)
+        elif kind=='quality':
+            self.log.add_withheld(payload,self.baseline)
+            if not self.baseline.collecting and self.index<20:
+                t=self.trials[self.index]
+                # Assigned condition is the scripted truth; reading correctness was not confirmed.
+                self.log.rows[-1].update(protocol='paired-numeric-v1',trial_order=t['trial_order'],pair_id=t['pair_id'],prompt=t['prompt'],digits=t['digits'],assigned_condition=t['condition'],trial_valid='')
+            if not self.save():return
+            self.status.set('측정 보류: '+payload.get('reason','')+' · 기록함 · 같은 문장을 다시 읽어 주세요.');self.session.resume()
         elif kind=='status':self.status.set(payload)
         elif kind=='error':messagebox.showerror('실행 오류',str(payload),parent=self.root)
     def poll(self):
