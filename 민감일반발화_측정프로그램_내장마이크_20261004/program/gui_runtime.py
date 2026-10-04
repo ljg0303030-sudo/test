@@ -4,6 +4,9 @@ import threading
 import time
 import math
 from audio_input import UtteranceSegmenter
+
+# Surrounding audio handed to the boundary module (see segmenter_context_check.py).
+CONTEXT_SEC = 0.3
 from personal_baseline import PersonalBaseline
 from threshold_compare import AcousticFeatures
 
@@ -72,7 +75,7 @@ class LiveSession:
             if factory is None:
                 import sounddevice as sd
                 factory = sd.InputStream
-            segmenter = UtteranceSegmenter(samplerate=self.samplerate)
+            segmenter = UtteranceSegmenter(samplerate=self.samplerate, context_sec=CONTEXT_SEC)
             self.accepting.set()
             with factory(samplerate=self.samplerate, channels=1, blocksize=1024,
                          dtype='float32', device=self.device, callback=self._callback) as stream:
@@ -87,7 +90,7 @@ class LiveSession:
                     if self.overflow.is_set():
                         self.overflow.clear()
                         self._clear_blocks()
-                        segmenter = UtteranceSegmenter(samplerate=self.samplerate)
+                        segmenter = UtteranceSegmenter(samplerate=self.samplerate, context_sec=CONTEXT_SEC)
                         calibrated = False
                         self._emit('status', '입력 누락 감지 · 소음을 다시 측정합니다. 잠시 조용히 기다려 주세요.')
                     try:

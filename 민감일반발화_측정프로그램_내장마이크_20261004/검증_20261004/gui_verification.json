@@ -1,0 +1,202 @@
+{
+ "note": "Fake sounddevice; real WAV streamed through real GUI pipeline. Not a live microphone test.",
+ "checks": [
+  {
+   "name": "장치 목록: 입력 장치만, 드라이버 방식 표시",
+   "passed": true,
+   "detail": "['0: Microsoft 사운드 매퍼 - Input [MME] · Windows 기본 입력', '1: 마이크 배열(Realtek(R) Audio) [MME]', '3: 마이크 배열(Realtek(R) Audio) [Windows WASAPI]']"
+  },
+  {
+   "name": "기준선 45개 복원·판정 단계",
+   "passed": true,
+   "detail": "45"
+  },
+  {
+   "name": "장치 미선택 시 시작 거부",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "name": "16 kHz로 못 여는 장치는 시작 전 안내",
+   "passed": true,
+   "detail": "3: 마이크 배열(Realtek(R) Audio) [Windows WASAPI]"
+  },
+  {
+   "name": "trial01_63b96bf2_raw.wav: GUI 처리·정답 대기",
+   "passed": true,
+   "detail": "evaluation / normal "
+  },
+  {
+   "name": "trial01_63b96bf2_raw.wav: 실제 열린 장치·표본화율 기록",
+   "passed": true,
+   "detail": "('1: 마이크 배열(Realtek(R) Audio) [MME]', 16000.0)"
+  },
+  {
+   "name": "trial02_6087632e_raw.wav: GUI 처리·정답 대기",
+   "passed": true,
+   "detail": "evaluation / normal "
+  },
+  {
+   "name": "trial02_6087632e_raw.wav: 실제 열린 장치·표본화율 기록",
+   "passed": true,
+   "detail": "('1: 마이크 배열(Realtek(R) Audio) [MME]', 16000.0)"
+  },
+  {
+   "name": "trial03_4ac1b784_raw.wav: GUI 처리·정답 대기",
+   "passed": true,
+   "detail": "evaluation / normal "
+  },
+  {
+   "name": "trial03_4ac1b784_raw.wav: 실제 열린 장치·표본화율 기록",
+   "passed": true,
+   "detail": "('1: 마이크 배열(Realtek(R) Audio) [MME]', 16000.0)"
+  },
+  {
+   "name": "trial04_a48a25c5_raw.wav: GUI 처리·정답 대기",
+   "passed": true,
+   "detail": "evaluation / normal "
+  },
+  {
+   "name": "trial04_a48a25c5_raw.wav: 실제 열린 장치·표본화율 기록",
+   "passed": true,
+   "detail": "('1: 마이크 배열(Realtek(R) Audio) [MME]', 16000.0)"
+  },
+  {
+   "name": "trial05_1f527aee_raw.wav: GUI 처리·정답 대기",
+   "passed": true,
+   "detail": "evaluation / normal "
+  },
+  {
+   "name": "trial05_1f527aee_raw.wav: 실제 열린 장치·표본화율 기록",
+   "passed": true,
+   "detail": "('1: 마이크 배열(Realtek(R) Audio) [MME]', 16000.0)"
+  },
+  {
+   "name": "trial06_10736480_raw.wav: GUI 처리·정답 대기",
+   "passed": true,
+   "detail": "evaluation / normal "
+  },
+  {
+   "name": "trial06_10736480_raw.wav: 실제 열린 장치·표본화율 기록",
+   "passed": true,
+   "detail": "('1: 마이크 배열(Realtek(R) Audio) [MME]', 16000.0)"
+  },
+  {
+   "name": "보류 발화: 특징값·사유 기록",
+   "passed": true,
+   "detail": "검증용 강제 보류"
+  },
+  {
+   "name": "보류 발화: 정답 지정 가능",
+   "passed": true,
+   "detail": "sensitive"
+  },
+  {
+   "name": "보류 발화: 기준선 불변",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "name": "성적: 보류율 표시",
+   "passed": true,
+   "detail": "이번 실행에서 정답을 지정한 평가 발화(측정 보류 포함): 7개 | 기준선 수집·미지정·모름은 제외합니다. 같은 화자의 반복 발화이므로 독립 표본이 아닙니다. | 일반 정답 6개 중 측정 보류 0개 (0.0%), 판정 가능 6개 | 민감 정답 1개 중 측정 보류 1개 (100.0%), 판정 가능 0개 |  | 개인 기준선: 민감 검출 0/0 (계산 불가), 일반 오탐 0/6 (0.0%) · 판정된 발화 기준 | 판정 보류·계산 실패: 1/7개 |  | 모델 기본: 민감 검출 0/0 (계산 불가), 일반 오탐 0/6 (0.0%) · 판정된 발화 기준 | 판정 보류·계산 실패: 1/7개 |  | 모델 완화: 민감 검출 0/0 (계산 불가), 일반 오탐 0/6 (0.0%) · 판정된 발화 기준 | 판정 보류·계산 실패: 1/7개"
+  },
+  {
+   "name": "자동 저장 CSV에 보류 행·장치 열 존재",
+   "passed": true,
+   "detail": "7"
+  },
+  {
+   "name": "CONTROLLED_20 기준선 불러오기 (참조 파일 없음)",
+   "passed": true,
+   "detail": "(45, 45)"
+  },
+  {
+   "name": "CONTROLLED_20 기준선 불러오기 (참조 파일 있음)",
+   "passed": true,
+   "detail": "(45, 45)"
+  }
+ ],
+ "recordings": [
+  {
+   "file": "trial01_63b96bf2_raw.wav",
+   "processed": true,
+   "phase": "evaluation",
+   "prediction": "normal",
+   "reason": "",
+   "speech_rate": 3.6316472114137484,
+   "jitter": 0.021526551171965714,
+   "shimmer": 0.1135763368763472,
+   "analysis_duration_sec": 3.855,
+   "device": "1: 마이크 배열(Realtek(R) Audio) [MME]",
+   "stream_samplerate": 16000.0
+  },
+  {
+   "file": "trial02_6087632e_raw.wav",
+   "processed": true,
+   "phase": "evaluation",
+   "prediction": "normal",
+   "reason": "",
+   "speech_rate": 4.081632653061225,
+   "jitter": 0.02558829285727198,
+   "shimmer": 0.1319625198638275,
+   "analysis_duration_sec": 4.165,
+   "device": "1: 마이크 배열(Realtek(R) Audio) [MME]",
+   "stream_samplerate": 16000.0
+  },
+  {
+   "file": "trial03_4ac1b784_raw.wav",
+   "processed": true,
+   "phase": "evaluation",
+   "prediction": "normal",
+   "reason": "",
+   "speech_rate": 3.3333333333333335,
+   "jitter": 0.02116455038504552,
+   "shimmer": 0.12818718877736018,
+   "analysis_duration_sec": 3.9,
+   "device": "1: 마이크 배열(Realtek(R) Audio) [MME]",
+   "stream_samplerate": 16000.0
+  },
+  {
+   "file": "trial04_a48a25c5_raw.wav",
+   "processed": true,
+   "phase": "evaluation",
+   "prediction": "normal",
+   "reason": "",
+   "speech_rate": 4.3126684636118595,
+   "jitter": 0.025388328480969738,
+   "shimmer": 0.11885888238396014,
+   "analysis_duration_sec": 3.71,
+   "device": "1: 마이크 배열(Realtek(R) Audio) [MME]",
+   "stream_samplerate": 16000.0
+  },
+  {
+   "file": "trial05_1f527aee_raw.wav",
+   "processed": true,
+   "phase": "evaluation",
+   "prediction": "normal",
+   "reason": "",
+   "speech_rate": 3.674540682414698,
+   "jitter": 0.021238581461589016,
+   "shimmer": 0.13537527010025802,
+   "analysis_duration_sec": 3.81,
+   "device": "1: 마이크 배열(Realtek(R) Audio) [MME]",
+   "stream_samplerate": 16000.0
+  },
+  {
+   "file": "trial06_10736480_raw.wav",
+   "processed": true,
+   "phase": "evaluation",
+   "prediction": "normal",
+   "reason": "",
+   "speech_rate": 4.097311139564661,
+   "jitter": 0.020236320497228174,
+   "shimmer": 0.13112938744155048,
+   "analysis_duration_sec": 3.905,
+   "device": "1: 마이크 배열(Realtek(R) Audio) [MME]",
+   "stream_samplerate": 16000.0
+  }
+ ],
+ "passed": 23,
+ "total": 23
+}

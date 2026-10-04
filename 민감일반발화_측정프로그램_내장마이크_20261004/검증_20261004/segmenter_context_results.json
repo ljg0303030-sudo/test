@@ -1,0 +1,278 @@
+[
+ {
+  "file": "trial01_63b96bf2_raw.wav",
+  "a": {
+   "status": "ok",
+   "input_sec": 8.0,
+   "duration_sec": 3.86,
+   "peaks": 14,
+   "speech_rate": 3.626943005181347,
+   "jitter_pct": 2.2836040539066493,
+   "shimmer_pct": 11.494728688421374,
+   "noise_proxy_dbfs": -97.20515101164867,
+   "guard": "pass"
+  },
+  "b": {
+   "n_utterances": 1,
+   "results": [
+    {
+     "status": "ok",
+     "input_sec": 3.84,
+     "duration_sec": 3.72,
+     "peaks": 14,
+     "speech_rate": 3.7634408602150535,
+     "jitter_pct": 2.2082162940899326,
+     "shimmer_pct": 11.319495262831616,
+     "noise_proxy_dbfs": -39.149482971002854,
+     "guard": "pass"
+    }
+   ]
+  },
+  "c": {
+   "n_utterances": 1,
+   "results": [
+    {
+     "status": "ok",
+     "input_sec": 4.46,
+     "duration_sec": 3.85,
+     "peaks": 14,
+     "speech_rate": 3.6363636363636362,
+     "jitter_pct": 2.234187350751251,
+     "shimmer_pct": 11.36725134108995,
+     "noise_proxy_dbfs": -89.90095518428343,
+     "guard": "pass"
+    }
+   ]
+  }
+ },
+ {
+  "file": "trial02_6087632e_raw.wav",
+  "a": {
+   "status": "ok",
+   "input_sec": 8.0,
+   "duration_sec": 4.17,
+   "peaks": 17,
+   "speech_rate": 4.07673860911271,
+   "jitter_pct": 2.628293565225155,
+   "shimmer_pct": 13.054904695904629,
+   "noise_proxy_dbfs": -97.16505912697473,
+   "guard": "pass"
+  },
+  "b": {
+   "n_utterances": 1,
+   "results": [
+    {
+     "status": "ok",
+     "input_sec": 4.16,
+     "duration_sec": 4.105,
+     "peaks": 17,
+     "speech_rate": 4.141291108404385,
+     "jitter_pct": 2.5281505487169613,
+     "shimmer_pct": 13.032844398521547,
+     "noise_proxy_dbfs": -46.462927462435104,
+     "guard": "pass"
+    }
+   ]
+  },
+  "c": {
+   "n_utterances": 1,
+   "results": [
+    {
+     "status": "ok",
+     "input_sec": 4.78,
+     "duration_sec": 4.165,
+     "peaks": 17,
+     "speech_rate": 4.081632653061225,
+     "jitter_pct": 2.5281505487169618,
+     "shimmer_pct": 13.032844398521465,
+     "noise_proxy_dbfs": -90.6918511689873,
+     "guard": "pass"
+    }
+   ]
+  }
+ },
+ {
+  "file": "trial03_4ac1b784_raw.wav",
+  "a": {
+   "status": "ok",
+   "input_sec": 8.0,
+   "duration_sec": 3.905,
+   "peaks": 13,
+   "speech_rate": 3.329065300896287,
+   "jitter_pct": 2.076141105991998,
+   "shimmer_pct": 13.288750756236828,
+   "noise_proxy_dbfs": -97.16505912697473,
+   "guard": "pass"
+  },
+  "b": {
+   "n_utterances": 1,
+   "results": [
+    {
+     "status": "ok",
+     "input_sec": 3.904,
+     "duration_sec": 3.745,
+     "peaks": 13,
+     "speech_rate": 3.4712950600801067,
+     "jitter_pct": 1.9987665970507031,
+     "shimmer_pct": 12.241775632204789,
+     "noise_proxy_dbfs": -40.65509642093168,
+     "guard": "pass"
+    }
+   ]
+  },
+  "c": {
+   "n_utterances": 1,
+   "results": [
+    {
+     "status": "ok",
+     "input_sec": 4.524,
+     "duration_sec": 3.9,
+     "peaks": 13,
+     "speech_rate": 3.3333333333333335,
+     "jitter_pct": 2.1494131241514105,
+     "shimmer_pct": 13.002561873733917,
+     "noise_proxy_dbfs": -91.92062099914745,
+     "guard": "pass"
+    }
+   ]
+  }
+ },
+ {
+  "file": "trial04_a48a25c5_raw.wav",
+  "a": {
+   "status": "ok",
+   "input_sec": 8.0,
+   "duration_sec": 3.715,
+   "peaks": 16,
+   "speech_rate": 4.306864064602961,
+   "jitter_pct": 2.35585213315224,
+   "shimmer_pct": 11.83247481127276,
+   "noise_proxy_dbfs": -97.16505912697473,
+   "guard": "pass"
+  },
+  "b": {
+   "n_utterances": 1,
+   "results": [
+    {
+     "status": "ok",
+     "input_sec": 3.712,
+     "duration_sec": 3.58,
+     "peaks": 16,
+     "speech_rate": 4.4692737430167595,
+     "jitter_pct": 2.4113342734912857,
+     "shimmer_pct": 11.87477227226382,
+     "noise_proxy_dbfs": -42.272271542957085,
+     "guard": "pass"
+    }
+   ]
+  },
+  "c": {
+   "n_utterances": 1,
+   "results": [
+    {
+     "status": "ok",
+     "input_sec": 4.332,
+     "duration_sec": 3.71,
+     "peaks": 16,
+     "speech_rate": 4.3126684636118595,
+     "jitter_pct": 2.448061277213502,
+     "shimmer_pct": 11.8647013178852,
+     "noise_proxy_dbfs": -92.3938465797781,
+     "guard": "pass"
+    }
+   ]
+  }
+ },
+ {
+  "file": "trial05_1f527aee_raw.wav",
+  "a": {
+   "status": "ok",
+   "input_sec": 8.0,
+   "duration_sec": 3.81,
+   "peaks": 14,
+   "speech_rate": 3.674540682414698,
+   "jitter_pct": 2.1238581461589017,
+   "shimmer_pct": 13.537527010025801,
+   "noise_proxy_dbfs": -97.16505912697473,
+   "guard": "pass"
+  },
+  "b": {
+   "n_utterances": 1,
+   "results": [
+    {
+     "status": "ok",
+     "input_sec": 3.84,
+     "duration_sec": 3.75,
+     "peaks": 14,
+     "speech_rate": 3.7333333333333334,
+     "jitter_pct": 2.0750624963043656,
+     "shimmer_pct": 13.351620358217456,
+     "noise_proxy_dbfs": -50.31517464986866,
+     "guard": "pass"
+    }
+   ]
+  },
+  "c": {
+   "n_utterances": 1,
+   "results": [
+    {
+     "status": "ok",
+     "input_sec": 4.46,
+     "duration_sec": 3.81,
+     "peaks": 14,
+     "speech_rate": 3.674540682414698,
+     "jitter_pct": 2.132917980399447,
+     "shimmer_pct": 13.589801996250683,
+     "noise_proxy_dbfs": -91.21411864469282,
+     "guard": "pass"
+    }
+   ]
+  }
+ },
+ {
+  "file": "trial06_10736480_raw.wav",
+  "a": {
+   "status": "ok",
+   "input_sec": 8.0,
+   "duration_sec": 3.915,
+   "peaks": 16,
+   "speech_rate": 4.086845466155811,
+   "jitter_pct": 2.0876731426136126,
+   "shimmer_pct": 13.42616437316182,
+   "noise_proxy_dbfs": -97.03540935533105,
+   "guard": "pass"
+  },
+  "b": {
+   "n_utterances": 1,
+   "results": [
+    {
+     "status": "ok",
+     "input_sec": 3.84,
+     "duration_sec": 3.795,
+     "peaks": 16,
+     "speech_rate": 4.216073781291173,
+     "jitter_pct": 2.1093564049775226,
+     "shimmer_pct": 13.767238921581962,
+     "noise_proxy_dbfs": -43.61912033060337,
+     "guard": "pass"
+    }
+   ]
+  },
+  "c": {
+   "n_utterances": 1,
+   "results": [
+    {
+     "status": "ok",
+     "input_sec": 4.46,
+     "duration_sec": 3.905,
+     "peaks": 16,
+     "speech_rate": 4.097311139564661,
+     "jitter_pct": 2.097066327743744,
+     "shimmer_pct": 13.727073086591416,
+     "noise_proxy_dbfs": -89.65741029938934,
+     "guard": "pass"
+    }
+   ]
+  }
+ }
+]

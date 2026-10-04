@@ -1,10 +1,17 @@
 {
-  "python_compilation": true,
-  "gui_creation": true,
-  "baseline_45_restored": true,
-  "real_wav_extraction": true,
-  "context_guard": true,
-  "result_display": true,
-  "ground_truth_csv_save": true,
-  "live_capture_tested": false
+  "version": "gui-boundary-context-20261004-internalmic",
+  "based_on": "민감일반발화_측정프로그램_본체용_20261002",
+  "headless_gui_flow_with_fake_device": "23/23 passed (검증_20261004/gui_verification.json)",
+  "segmenter_context_comparison": "검증_20261004/segmenter_context_results.json",
+  "legacy_unit_tests": "same 11 failures before and after modification; no new failures",
+  "thresholds_model_peak_counter_jitter_shimmer_settings_changed": false,
+  "live_capture_tested": false,
+  "windows_runtime_tested": false,
+  "controlled_20_live_flow_tested": false,
+  "classification_accuracy_validated": false,
+  "previous_20261002_verification": {
+    "python_compilation": true, "gui_creation": true, "baseline_45_restored": true,
+    "real_wav_extraction": true, "context_guard": true, "result_display": true,
+    "ground_truth_csv_save": true, "live_capture_tested": false
+  }
 }

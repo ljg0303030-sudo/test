@@ -123,8 +123,15 @@ class UtteranceSegmenter:
 
     def __init__(self, samplerate=16000,
                  silence_gap_sec=0.6, min_utterance_sec=0.5, max_utterance_sec=15.0,
-                 calibration_sec=1.5, margin_k=3.0, ema_alpha=0.05, floor_min=0.0008):
+                 calibration_sec=1.5, margin_k=3.0, ema_alpha=0.05, floor_min=0.0008,
+                 context_sec=0.0):
+        # context_sec: keep up to this much sub-threshold audio before the first and after the
+        # last voiced block, so the boundary module (measurement_boundary.bounds) - not the
+        # 64 ms block threshold - decides where speech starts and ends. 0 = original behaviour.
         self.samplerate = samplerate
+        self.context_sec = context_sec
+        self._preroll = []
+        self._preroll_samples = 0
         self.silence_gap_sec = silence_gap_sec
         self.min_utterance_sec = min_utterance_sec
         self.max_utterance_sec = max_utterance_sec
@@ -167,6 +174,9 @@ class UtteranceSegmenter:
             self._elapsed_accum += block_dur
 
         if is_voiced:
+            if not self._in_speech and self._preroll:
+                self._buffer.extend(self._preroll)
+            self._preroll, self._preroll_samples = [], 0
             self._trailing_samples = 0
             self._buffer.append(block)
             self._speech_accum += block_dur
@@ -175,6 +185,11 @@ class UtteranceSegmenter:
         else:
             # 무음으로 판정된 블록으로 노이즈 플로어를 계속 추적(서서히 변하는 배경소음 대응)
             self.noise_floor.update_from_silence_block(energy)
+            if not self._in_speech and self.context_sec > 0:
+                self._preroll.append(block)
+                self._preroll_samples += len(block)
+                while self._preroll and self._preroll_samples - len(self._preroll[0]) >= self.context_sec * self.samplerate:
+                    self._preroll_samples -= len(self._preroll.pop(0))
             if self._in_speech:
                 # 발화 중 짧은 무음은 자연스러운 파형을 위해 버퍼에 계속 포함
                 self._buffer.append(block)
@@ -192,8 +207,9 @@ class UtteranceSegmenter:
     def _finalize(self):
         utterance = np.concatenate(self._buffer) if self._buffer else np.array([], dtype=np.float32)
         # Remove endpoint-detection waiting silence, preserving internal pauses.
-        if self._trailing_samples:
-            utterance = utterance[:-self._trailing_samples]
+        drop = self._trailing_samples - min(self._trailing_samples, round(self.context_sec * self.samplerate))
+        if drop:
+            utterance = utterance[:-drop]
         # 판정은 "실제 발화(음성) 누적 시간" 기준으로 한다 — 총 버퍼 길이로 판정하면
         # 발화종료 대기용으로 뒤에 붙은 무음 패딩(silence_gap_sec)이 길이를 부풀려서
         # 짧은 잡음도 발화로 잘못 통과될 수 있다.
