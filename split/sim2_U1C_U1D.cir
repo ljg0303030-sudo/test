@@ -1,0 +1,57 @@
+* 2차 시뮬레이션 : U1C(4.8V) -> D2 , U1D(2.4V) -> D3
+* 기준전압 VR3=2/5 VCC, VR4=1/5 VCC
+*
+* 사용법: PSpice A/D 실행 -> File > Open -> 이 파일 -> Simulation > Run
+.PARAM VCCV=12 VINV=8
+
+*==== 전원 ====
+V1   VCC  0  DC {VCCV}
+V2   VIN  0  DC {VINV}
+
+*==== U2 : Sw_tClose (t=0 에서 닫힘, Ron=10m, Roff=1Meg) ====
+VCTRL  CTRL 0  PWL(0 0 1u 1)
+S_U2   VIN  NIN  CTRL 0  SWT
+.MODEL SWT VSWITCH(RON=10m ROFF=1Meg VON=1 VOFF=0)
+
+*==== 기준전압 분배 저항 (지우지 않음) ====
+R9   VCC   VR1  1k
+R1   VR1   VR2  1k
+R2   VR2   VR3  1k
+R3   VR3   VR4  1k
+R4   VR4   0    1k
+
+*==== + 입력 커패시터 (지우지 않음) ====
+C1   NIN  0  100u
+C2   NIN  0  100u
+C3   NIN  0  100u
+C4   NIN  0  100u
+
+*==== 비교기 + 출력 저항 + LED ====
+X_U1C  NIN  VR3  VCC  0  OUT8   LM324
+R7   OUT8   A2  330
+D2   A2  0  LED
+X_U1D  NIN  VR4  VCC  0  OUT14  LM324
+R8   OUT14  A3  330
+D3   A3  0  LED
+
+*==== LED 모델 (적색 LED, 약 1.9V @ 20mA) ====
+.MODEL LED D(IS=1e-22 N=1.5 RS=6 CJO=50p BV=5 IBV=10u)
+
+*==== LM324 간이 모델 (라이브러리 불필요) ====
+* 핀순서 : IN+ IN- V+ V- OUT
+* 개루프이득 1e5, 출력 0.02V ~ (VCC-1.5V), 출력저항 10ohm
+.SUBCKT LM324 INP INN VP VN OUT
+RIN   INP INN 2MEG
+EG    N1 VN VALUE={MAX(MIN(1E5*V(INP,INN), V(VP,VN)-1.5), 0.02)}
+RP    N1 N2 1k
+CP    N2 VN 10n
+EB    N3 VN N2 VN 1
+RO    N3 OUT 10
+IQ    VP VN 0.7m
+.ENDS LM324
+
+*==== 해석 ====
+.TRAN 0 10m 0 10u
+.STEP PARAM VINV LIST 0 2 4 6 8 10 12
+.PROBE
+.END
