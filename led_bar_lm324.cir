@@ -1,0 +1,63 @@
+* LM324 4-Level LED Bar Indicator (Window comparator ladder)
+*-----------------------------------------------------------------
+* 기준전압 (VCC=12V 기준)
+*   U1A(-) = 4/5 VCC = 9.6V  -> D1
+*   U1B(-) = 3/5 VCC = 7.2V  -> D2
+*   U1C(-) = 2/5 VCC = 4.8V  -> D3
+*   U1D(-) = 1/5 VCC = 2.4V  -> D4
+*-----------------------------------------------------------------
+
+.PARAM VCCV=12 VINV=8
+
+*---------------- 전원 ----------------
+VCC   VCC  0  DC {VCCV}
+VIN   VIN  0  DC {VINV}
+
+*---------------- U2 : Sw_tClose (TCLOSE=0) ----------------
+* t=0 에서 닫히는 스위치 (TTRAN=1us, RCLOSED=10m, ROPEN=1Meg)
+VCTRL  CTRL 0    PWL(0 0 1u 1)
+S_U2   VIN  N2   CTRL 0  SW_TCLOSE
+.MODEL SW_TCLOSE VSWITCH(RON=10m ROFF=1Meg VON=1 VOFF=0)
+
+*---------------- 기준전압 분배 저항 ----------------
+R1   VCC   REF1  1k
+R3   REF1  REF2  1k
+R5   REF2  REF3  1k
+R7   REF3  REF4  1k
+R9   REF4  0     1k
+
+*---------------- 입력(+) 노드 커패시터 ----------------
+C2   N2  0  100u
+C3   N2  0  100u
+C4   N2  0  100u
+C5   N2  0  100u
+
+*---------------- LM324 (핀순서: IN+ IN- V+ V- OUT) ----------------
+X_U1A  N2  REF1  VCC  0  OUT1   LM324
+X_U1B  N2  REF2  VCC  0  OUT7   LM324
+X_U1C  N2  REF3  VCC  0  OUT8   LM324
+X_U1D  N2  REF4  VCC  0  OUT14  LM324
+
+*---------------- 출력 저항 + LED ----------------
+R2   OUT1   A1  330
+D1   A1     0   LED
+R4   OUT7   A2  330
+D2   A2     0   LED
+R6   OUT8   A3  330
+D3   A3     0   LED
+R8   OUT14  A4  330
+D4   A4     0   LED
+
+* 일반 적색 LED 모델 (약 1.9V @ 20mA)
+.MODEL LED D(IS=1e-22 N=1.5 RS=6 CJO=50p BV=5 IBV=10u)
+
+*---------------- 라이브러리 ----------------
+* LM324 모델 포함 (OrCAD/PSpice 기본 라이브러리)
+.LIB "nom.lib"
+
+*---------------- 해석 ----------------
+.TRAN 0 10m 0 10u
+.STEP PARAM VINV LIST 1 3.5 6 8.5 11
+.PROBE
+
+.END
