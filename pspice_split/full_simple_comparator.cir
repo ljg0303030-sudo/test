@@ -1,0 +1,52 @@
+* ===== 전체 회로 (LM324 를 간단한 비교기 모델로 교체 -> 한 번에 시뮬레이션) =====
+* LM324 1개당 내부 노드가 15개라 4개면 체험판 한도를 넘음.
+* 이 파일은 비교기를 행동모델(ETABLE)로 바꿔 내부 노드를 1개로 줄인 버전.
+* 출력 High = 10.5V (LM324 를 12V 단전원으로 쓸 때의 대략적인 최대 출력), Low = 0V.
+* ---- 전원 ----
+V1 VCC 0 DC 12
+V2 VIN 0 DC 6
+
+* ---- 스위치 U2 (Sw_tClose 대체: t=1ms 에서 닫힘) ----
+VCTL CTL 0 PWL(0 0 1m 0 1.001m 1)
+SU2  VIN N2 CTL 0 SWCLOSE
+.model SWCLOSE VSWITCH(Ron=0.01 Roff=1Meg Von=1 Voff=0)
+
+* ---- 비교 기준 전압 분배기 (5개 저항 모두 유지 -> 기준전압 동일) ----
+R9 VCC REF1 1k
+R1 REF1 REF2 1k
+R2 REF2 REF3 1k
+R3 REF3 REF4 1k
+R4 REF4 0    1k
+
+* ---- + 입력 공통선의 커패시터 (모두 N2 에 병렬, 노드 추가 없음) ----
+C1 N2 0 100u
+C2 N2 0 100u
+C3 N2 0 100u
+C4 N2 0 100u
+
+* ---- LED 대신 쓰인 Dbreak 모델 ----
+.model Dbreak D(Is=1e-14 Rs=0.1 Cjo=0.1p)
+
+* ---- 이상적 비교기 (+입력, -입력, 출력) ----
+.subckt COMP INP INN OUT
+ECMP OI 0 TABLE {V(INP,INN)} = (-1m,0) (1m,10.5)
+RO   OI OUT 50
+.ends COMP
+
+XU1A N2 REF1 OUT1 COMP
+R5 OUT1 OUT1_A 330
+D1 OUT1_A 0 Dbreak
+XU1B N2 REF2 OUT7 COMP
+R6 OUT7 OUT7_A 330
+D2 OUT7_A 0 Dbreak
+XU1C N2 REF3 OUT8 COMP
+R7 OUT8 OUT8_A 330
+D3 OUT8_A 0 Dbreak
+XU1D N2 REF4 OUT14 COMP
+R8 OUT14 OUT14_A 330
+D4 OUT14_A 0 Dbreak
+
+.TRAN 10u 10m
+.PROBE
+.PRINT TRAN V(N2) V(OUT1) V(OUT7) V(OUT8) V(OUT14)
+.END
